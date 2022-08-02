@@ -3,6 +3,12 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# vscode
+.vscode
+
+# pre commit
+.pre-commit-config.yaml
+
 # C extensions
 *.so
 
