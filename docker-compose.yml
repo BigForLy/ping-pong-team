@@ -1,0 +1,66 @@
+version: '3.9'
+
+services:
+
+  micro_1:
+    build: ./fastapi_app_1
+    restart: unless-stopped
+    image: micro_1
+    container_name: micro_1
+    # command: sh -c "gunicorn --workers=3 -b 0.0.0.0:8000 -k uvicorn.workers.UvicornWorker main:app"
+    command: sh -c "uvicorn main:app --proxy-headers --host 0.0.0.0 --port 8000"
+    volumes:
+      - micro_1:/micro_1/data
+    ports:
+      - 8000:8000
+    networks:
+      - micro
+
+  micro_2:
+    build: ./fastapi_app_1
+    restart: unless-stopped
+    image: micro_1
+    container_name: micro_2
+    command: sh -c "uvicorn main:app --proxy-headers --host 0.0.0.0 --port 8000"
+    volumes:
+      - micro_2:/micro_2/data
+    ports:
+      - 8002:8000
+    networks:
+      - micro
+
+  micro_3:
+    build: ./fastapi_app_1
+    restart: unless-stopped
+    image: micro_1
+    container_name: micro_3
+    command: sh -c "uvicorn main:app --proxy-headers --host 0.0.0.0 --port 8000"
+    volumes:
+      - micro_3:/micro_3/data
+    ports:
+      - 8003:8000
+    networks:
+      - micro
+
+  micro_4:
+    build: ./fastapi_app_1
+    restart: unless-stopped
+    image: micro_1
+    container_name: micro_4
+    command: sh -c "uvicorn main:app --proxy-headers --host 0.0.0.0 --port 8000"
+    volumes:
+      - micro_4:/micro_4/data
+    ports:
+      - 8004:8000
+    networks:
+      - micro
+
+networks:
+  micro:
+
+
+volumes:
+  micro_1:
+  micro_2:
+  micro_3:
+  micro_4:
