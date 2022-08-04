@@ -4,24 +4,26 @@ from core.const import SHUTDOWN_EVENT, STARTUP_EVENT
 from routes import router as router_api
 from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
 import asyncio
+import os
 
 
 class MyFastAPI(FastAPI):
     def initialize_kafka(self):
         settings = get_settings()
+        path = f'{os.getenv("KAFKA_SERVER")}:{os.getenv("KAFKA_PORT")}'
 
         loop = asyncio.get_event_loop()
         self.aioproducer = AIOKafkaProducer(
             loop=loop,
-            bootstrap_servers=settings.kafka_instance,
+            bootstrap_servers=path,
             client_id=settings.app_name,
         )
         self.aioconsumer = AIOKafkaConsumer(
             *settings.kafka_tags,
-            bootstrap_servers=settings.kafka_instance,
+            bootstrap_servers=path,
             loop=loop,
             client_id=settings.app_name,
-            group_id=settings.kafka_group_id
+            group_id=settings.kafka_group_id,
         )
 
     async def consume_start(self):
