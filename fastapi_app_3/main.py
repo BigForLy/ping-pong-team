@@ -41,6 +41,8 @@ class MyFastAPI(FastAPI):
                     msg.value,
                     msg.timestamp,
                 )
+                await asyncio.sleep(5)
+                await app.aioproducer.send("mic4", key=b"mic4", value=b"pong")
 
         finally:
             await self.aioconsumer.stop()
