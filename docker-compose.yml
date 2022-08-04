@@ -1,66 +1,91 @@
-version: '3.9'
+version: "3.9"
 
 services:
-
-  micro_1:
-    build: ./fastapi_app_1
-    restart: unless-stopped
-    image: micro_1
-    container_name: micro_1
-    # command: sh -c "gunicorn --workers=3 -b 0.0.0.0:8000 -k uvicorn.workers.UvicornWorker main:app"
-    command: sh -c "uvicorn main:app --proxy-headers --host 0.0.0.0 --port 8000"
-    volumes:
-      - micro_1:/micro_1/data
-    ports:
-      - 8000:8000
+  zookeeper:
+    image: confluentinc/cp-zookeeper
+    container_name: zookeeper
     networks:
-      - micro
-
-  micro_2:
-    build: ./fastapi_app_1
-    restart: unless-stopped
-    image: micro_1
-    container_name: micro_2
-    command: sh -c "uvicorn main:app --proxy-headers --host 0.0.0.0 --port 8000"
-    volumes:
-      - micro_2:/micro_2/data
+      - broker-kafka
     ports:
-      - 8002:8000
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka
+    container_name: kafka
     networks:
-      - micro
+      - broker-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "9101:9101"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ADVERTISED_HOST_NAME: kafka:9092
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CREATE_TOPICS: "mic3:1:1,mic4:1:1"
+
+  kafdrop:
+    image: obsidiandynamics/kafdrop
+    networks:
+      - broker-kafka
+    depends_on:
+      - kafka
+      - zookeeper
+    ports:
+      - 19000:9000
+    environment:
+      KAFKA_BROKERCONNECT: kafka:29092
 
   micro_3:
-    build: ./fastapi_app_1
+    build: ./fastapi_app_3
     restart: unless-stopped
-    image: micro_1
+    image: micro_3
     container_name: micro_3
     command: sh -c "uvicorn main:app --proxy-headers --host 0.0.0.0 --port 8000"
+    environment:
+      - KAFKA_SERVER=kafka
+      - KAFKA_PORT=29092
+    depends_on:
+      - zookeeper
+      - kafka
     volumes:
       - micro_3:/micro_3/data
     ports:
       - 8003:8000
     networks:
-      - micro
+      - broker-kafka
 
   micro_4:
-    build: ./fastapi_app_1
+    build: ./fastapi_app_4
     restart: unless-stopped
-    image: micro_1
+    image: micro_4
     container_name: micro_4
     command: sh -c "uvicorn main:app --proxy-headers --host 0.0.0.0 --port 8000"
-    volumes:
-      - micro_4:/micro_4/data
+    environment:
+      - KAFKA_SERVER=kafka
+      - KAFKA_PORT=29092
+    depends_on:
+      - zookeeper
+      - kafka
     ports:
       - 8004:8000
+    volumes:
+      - micro_4:/micro_4/data
     networks:
-      - micro
+      - broker-kafka
 
 networks:
-  micro:
-
+  broker-kafka:
+    driver: bridge
 
 volumes:
-  micro_1:
-  micro_2:
   micro_3:
   micro_4:
