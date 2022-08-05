@@ -1,26 +1,29 @@
+from __future__ import annotations
 import asyncio
 from typing import Any, Callable, Dict
 from aiokafka import AIOKafkaProducer, AIOKafkaConsumer
 from core.config import get_settings, Settings
 from aiokafka.errors import KafkaTimeoutError, KafkaError
+from loguru import logger
 
 
 def exception_kafka(func: Callable):
     async def _inner(*args, **kwargs):
         try:
+            logger.info(f"{kwargs=}")
             return await func(*args, **kwargs)
         except KafkaTimeoutError:
-            print(
-                "produce timeout... maybe we want to resend data again?"
-            )  # TODO: logger
-        except KafkaError:
-            print()
+            logger.error(f"KafkaTimeoutError — {args=} — {kwargs=}")
+        except KafkaError as e:
+            logger.error(f"KafkaError:{e} — {args=} — {kwargs=}")
+        except TypeError as e:
+            logger.error(f"TypeError:{e} — {args=} — {kwargs=}")
 
     return _inner
 
 
 class SingletonMeta(type):
-    _instances: Dict[Any, Any] = {}  # TODO
+    _instances: Dict[SingletonMeta, Kafka] = {}
 
     def __call__(self, *args: Any, **kwds: Any) -> Any:
         if self not in self._instances:
