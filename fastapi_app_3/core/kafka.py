@@ -53,10 +53,18 @@ class Kafka(metaclass=SingletonMeta):
                     msg.timestamp,
                 )
                 await asyncio.sleep(5)
-                await self.aioproducer.send("mic4", key=b"mic4", value=b"pong")
+                await self.send(message=b"pong")
 
         finally:
             await self.aioconsumer.stop()
+
+    async def send(self, *, message: bytes):
+        try:
+            # TODO: EDIT EXCEPTIOPN
+            await self.aioproducer.send("mic4", key=b"foo", value=message)
+        except Exception as e:
+            await self.aioproducer.stop()
+            raise e
 
 
 def get_kafka_instance():

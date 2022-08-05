@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     kafka_instance: str
     kafka_tags: List[str] = ["mic3"]
     kafka_group_id: str = "mic3"
+    router_prefix: str = "/api"
 
     class Config:
         env_file = ".env"
