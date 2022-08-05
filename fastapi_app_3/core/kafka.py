@@ -1,16 +1,25 @@
+from __future__ import annotations
 import asyncio
+from typing import Any, Dict
 from aiokafka import AIOKafkaProducer, AIOKafkaConsumer
 from core.config import get_settings, Settings
 
 
-class Kafka:
-    _instance = None
+class SingletonMeta(type):
+    _instances: Dict[Any, Any] = {}  # TODO
 
+    def __call__(self, *args: Any, **kwds: Any) -> Any:
+        if self not in self._instances:
+            instance = super().__call__(*args, **kwds)
+            self._instances[self] = instance
+        return self._instances[self]
+
+
+class Kafka(metaclass=SingletonMeta):
     def __init__(self) -> None:
         settings = get_settings()
         self.aioproducer = self.create_producer(settings)
         self.aioconsumer = self.create_aioconsumer(settings)
-        Kafka._instance = self
 
     def create_producer(self, settings: Settings):
         loop = asyncio.get_event_loop()
@@ -51,6 +60,4 @@ class Kafka:
 
 
 def get_kafka_instance():
-    if Kafka._instance:
-        return Kafka._instance
     return Kafka()
