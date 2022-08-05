@@ -1,8 +1,22 @@
-from __future__ import annotations
 import asyncio
-from typing import Any, Dict
+from typing import Any, Callable, Dict
 from aiokafka import AIOKafkaProducer, AIOKafkaConsumer
 from core.config import get_settings, Settings
+from aiokafka.errors import KafkaTimeoutError, KafkaError
+
+
+def exception_kafka(func: Callable):
+    async def _inner(*args, **kwargs):
+        try:
+            return await func(*args, **kwargs)
+        except KafkaTimeoutError:
+            print(
+                "produce timeout... maybe we want to resend data again?"
+            )  # TODO: logger
+        except KafkaError:
+            print()
+
+    return _inner
 
 
 class SingletonMeta(type):
@@ -58,13 +72,9 @@ class Kafka(metaclass=SingletonMeta):
         finally:
             await self.aioconsumer.stop()
 
+    @exception_kafka
     async def send(self, *, message: bytes):
-        try:
-            # TODO: EDIT EXCEPTIOPN
-            await self.aioproducer.send("mic4", key=b"foo", value=message)
-        except Exception as e:
-            await self.aioproducer.stop()
-            raise e
+        await self.aioproducer.send("mic4", key=b"foo", value=message)
 
 
 def get_kafka_instance():
