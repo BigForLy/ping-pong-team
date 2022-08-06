@@ -1,0 +1,5 @@
+STARTUP_EVENT = "startup"
+SHUTDOWN_EVENT = "shutdown"
+PONG_MESSAGE = b"pong"
+MESSAGE_KEY = b"foo"
+CUSTOMER = "mic1"
