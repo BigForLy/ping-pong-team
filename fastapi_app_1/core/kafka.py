@@ -4,6 +4,7 @@ from typing import Any, Callable, Dict
 from aiokafka import AIOKafkaProducer, AIOKafkaConsumer
 from core.config import get_settings, Settings
 from aiokafka.errors import KafkaTimeoutError, KafkaError
+from core.const import CUSTOMER, MESSAGE_KEY, PONG_MESSAGE
 from loguru import logger
 
 
@@ -60,24 +61,26 @@ class Kafka(metaclass=SingletonMeta):
         await self.aioconsumer.start()
         try:
             async for msg in self.aioconsumer:
-                print(
-                    "consumed: ",
-                    msg.topic,
-                    msg.partition,
-                    msg.offset,
-                    msg.key,
-                    msg.value,
-                    msg.timestamp,
+                logger.info(
+                    (
+                        "consumed: ",
+                        msg.topic,
+                        msg.partition,
+                        msg.offset,
+                        msg.key,
+                        msg.value,
+                        msg.timestamp,
+                    )
                 )
                 await asyncio.sleep(5)
-                await self.send(message=b"pong")
+                await self.send(message=PONG_MESSAGE)
 
         finally:
             await self.aioconsumer.stop()
 
     @exception_kafka
     async def send(self, *, message: bytes):
-        await self.aioproducer.send("mic4", key=b"foo", value=message)
+        await self.aioproducer.send(CUSTOMER, key=MESSAGE_KEY, value=message)
 
 
 def get_kafka_instance():

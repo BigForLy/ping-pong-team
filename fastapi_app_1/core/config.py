@@ -9,11 +9,16 @@ def get_settings():
 
 
 class Settings(BaseSettings):
-    app_name: str = "fast_api_3"
-    kafka_instance: str
-    kafka_tags: List[str] = ["mic3"]
-    kafka_group_id: str = "mic3"
+    app_name: str = "fast_api_1"
+    kafka_server: str
+    kafka_port: int
+    kafka_tags: List[str] = ["mic1"]
+    kafka_group_id: str = "mic1"
     router_prefix: str = "/api"
+
+    @property
+    def kafka_instance(self):
+        return f"{self.kafka_server}:{self.kafka_port}"
 
     class Config:
         env_file = ".env"
