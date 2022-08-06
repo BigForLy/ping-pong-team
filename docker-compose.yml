@@ -49,7 +49,7 @@ services:
     restart: unless-stopped
     image: micro_1
     container_name: micro_1
-    command: sh -c "uvicorn main:app --proxy-headers --host 0.0.0.0 --port 8000"
+    command: sh -c "gunicorn --workers=3 -b 0.0.0.0:8000 -k uvicorn.workers.UvicornWorker main:app"
     environment:
       - KAFKA_SERVER=kafka
       - KAFKA_PORT=29092
@@ -68,7 +68,7 @@ services:
     restart: unless-stopped
     image: micro_2
     container_name: micro_2
-    command: sh -c "uvicorn main:app --proxy-headers --host 0.0.0.0 --port 8000"
+    command: sh -c "gunicorn --workers=3 -b 0.0.0.0:8000 -k uvicorn.workers.UvicornWorker main:app"
     environment:
       - KAFKA_SERVER=kafka
       - KAFKA_PORT=29092
