@@ -45,7 +45,7 @@ services:
       KAFKA_BROKERCONNECT: kafka:29092
 
   micro_1:
-    build: ./fastapi_app_1
+    build: ./fastapi_app
     restart: unless-stopped
     image: micro_1
     container_name: micro_1
@@ -53,6 +53,12 @@ services:
     environment:
       - KAFKA_SERVER=kafka
       - KAFKA_PORT=29092
+      - KAFKA_GROUP_ID=mic1
+      - ROUTER_PREFIX=/api
+      - CUSTOMER_TAG=mic2
+      - APP_NAME=fast_api_1
+      - KAFKA_TAGS=["mic1"]
+      - PRODUCER_MESSAGE=ping
     depends_on:
       - zookeeper
       - kafka
@@ -64,14 +70,20 @@ services:
       - broker-kafka
 
   micro_2:
-    build: ./fastapi_app_2
+    build: ./fastapi_app
     restart: unless-stopped
-    image: micro_2
+    image: micro_1
     container_name: micro_2
     command: sh -c "gunicorn --workers=3 -b 0.0.0.0:8000 -k uvicorn.workers.UvicornWorker main:app"
     environment:
       - KAFKA_SERVER=kafka
       - KAFKA_PORT=29092
+      - KAFKA_GROUP_ID=mic2
+      - ROUTER_PREFIX=/api
+      - CUSTOMER_TAG=mic1
+      - APP_NAME=fast_api_2
+      - KAFKA_TAGS=["mic2"]
+      - PRODUCER_MESSAGE=pong
     depends_on:
       - zookeeper
       - kafka
