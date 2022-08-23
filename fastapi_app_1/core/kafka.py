@@ -4,7 +4,6 @@ from typing import Any, Callable, Dict
 from aiokafka import AIOKafkaProducer, AIOKafkaConsumer
 from core.config import get_settings, Settings
 from aiokafka.errors import KafkaTimeoutError, KafkaError
-from core.const import CUSTOMER, MESSAGE_KEY, PONG_MESSAGE
 from loguru import logger
 
 
@@ -38,13 +37,14 @@ class Kafka(metaclass=SingletonMeta):
         settings = get_settings()
         self.aioproducer = self.create_producer(settings)
         self.aioconsumer = self.create_aioconsumer(settings)
+        self.customer_tag = settings.customer_tag
+        self.message = settings.producer_message
 
     def create_producer(self, settings: Settings):
         loop = asyncio.get_event_loop()
         return AIOKafkaProducer(
             loop=loop,
             bootstrap_servers=settings.kafka_instance,
-            client_id=settings.app_name,
         )
 
     def create_aioconsumer(self, settings: Settings):
@@ -53,7 +53,6 @@ class Kafka(metaclass=SingletonMeta):
             *settings.kafka_tags,
             bootstrap_servers=settings.kafka_instance,
             loop=loop,
-            client_id=settings.app_name,
             group_id=settings.kafka_group_id,
         )
 
@@ -73,14 +72,14 @@ class Kafka(metaclass=SingletonMeta):
                     )
                 )
                 await asyncio.sleep(5)
-                await self.send(message=PONG_MESSAGE)
+                await self.send(message=self.message.encode())
 
         finally:
             await self.aioconsumer.stop()
 
     @exception_kafka
     async def send(self, *, message: bytes):
-        await self.aioproducer.send(CUSTOMER, key=MESSAGE_KEY, value=message)
+        await self.aioproducer.send(self.customer_tag, value=message)
 
 
 def get_kafka_instance():

@@ -9,12 +9,14 @@ def get_settings():
 
 
 class Settings(BaseSettings):
-    app_name: str = "fast_api_1"
+    app_name: str
     kafka_server: str
     kafka_port: int
-    kafka_tags: List[str] = ["mic1"]
-    kafka_group_id: str = "mic1"
-    router_prefix: str = "/api"
+    kafka_tags: List[str]
+    kafka_group_id: str
+    router_prefix: str
+    customer_tag: str
+    producer_message: str
 
     @property
     def kafka_instance(self):
